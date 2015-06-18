@@ -1,0 +1,2 @@
+include ':app', ':reqs-android'
+project(':reqs-android').projectDir = new File('../../plugins/android/')
