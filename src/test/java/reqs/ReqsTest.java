@@ -105,7 +105,7 @@ public class ReqsTest {
     public void Reqs_CreateThenA1A2Pause1secResumeThenA1A2A3_ResponseA1A2A1A2A3() {
         final Reqs reqs = Reqs.create().then(requestA1, requestA2).then(requestA1, requestA2, requestA3).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 Assert.assertEquals(responses.size(), 5);
                 Assert.assertEquals(responses.get(0), "A1");
                 Assert.assertEquals(responses.get(1), "A2");
@@ -115,7 +115,7 @@ public class ReqsTest {
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
 
             }
         });
@@ -167,12 +167,12 @@ public class ReqsTest {
     public void Reqs_CreateA1ThenF1ThenA2_FailRequestId1() {
         final Reqs reqs = Reqs.create(requestA1).then(requestF1).then(requestA2).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
 
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 Assert.assertEquals(failedResponse.getData(), "F1" + ERROR_SUFFIX);
                 assertResponseData(failedResponse.getReqs(), "A1", "F1" + ERROR_SUFFIX);
             }
@@ -185,12 +185,12 @@ public class ReqsTest {
     public void Reqs_CreateA1ThenF1F11ThenA2_FailRequestId1() {
         final Reqs reqs = Reqs.create(requestA1).then(requestF1, requestF11).then(requestA2).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 Assert.fail();
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 Assert.assertEquals(failedResponse.getData(), "F1" + ERROR_SUFFIX);
                 assertResponseData(failedResponse.getReqs(), "A1", "F1" + ERROR_SUFFIX);
             }
@@ -202,12 +202,12 @@ public class ReqsTest {
     public void Reqs_CreateA1ThenF2_FailRequestId1() {
         final Reqs reqs = Reqs.create(requestA1).then(requestF2).then(requestA2).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 Assert.fail();
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 Assert.assertEquals(failedResponse.getData(), "F2" + ERROR_SUFFIX);
                 assertResponseData(failedResponse.getReqs(), "A1", "F2" + ERROR_SUFFIX);
             }
@@ -224,7 +224,7 @@ public class ReqsTest {
     public void Reqs_Create2RequestsOn2Threads_ResponseCorrectly() {
         final Reqs reqs = Reqs.create(requestT1, requestT2, requestT1, requestT1, requestT1).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 for (Response response : responses) {
                     System.out.printf("response:" + response.getData());
                 }
@@ -232,7 +232,7 @@ public class ReqsTest {
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 Assert.fail();
             }
         });
@@ -258,44 +258,44 @@ public class ReqsTest {
      * Some requests for testings
      */
 
-    private Request<String> requestA1 = new Request<String>() {
+    private Request requestA1 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doRequest(requestSession, "A1");
         }
     };
 
-    private Request<String> requestA2 = new Request<String>() {
+    private Request requestA2 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doRequest(requestSession, "A2");
         }
     };
 
-    private Request<String> requestA3 = new Request<String>() {
+    private Request requestA3 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doRequest(requestSession, "A3");
         }
     };
 
-    private Request<String> requestA4 = new Request<String>() {
+    private Request requestA4 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doRequest(requestSession, "A4");
         }
     };
 
-    private Request<String> requestB1 = new Request<String>() {
+    private Request requestB1 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             requestSession.done("B1");
         }
     };
 
-    private Request<String> requestT1 = new Request<String>() {
+    private Request requestT1 = new Request() {
         @Override
-        public void onCall(final RequestSession<String> requestSession) {
+        public void onCall(final RequestSession requestSession) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -305,9 +305,9 @@ public class ReqsTest {
         }
     };
 
-    private Request<String> requestT2 = new Request<String>() {
+    private Request requestT2 = new Request() {
         @Override
-        public void onCall(final RequestSession<String> requestSession) {
+        public void onCall(final RequestSession requestSession) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -317,30 +317,30 @@ public class ReqsTest {
         }
     };
 
-    private Request<String> requestF1 = new Request<String>() {
+    private Request requestF1 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             requestSession.fail("F1" + ERROR_SUFFIX);
         }
     };
 
-    private Request<String> requestF11 = new Request<String>() {
+    private Request requestF11 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             requestSession.fail("F11" + ERROR_SUFFIX);
         }
     };
 
-    private Request<String> requestF2 = new Request<String>() {
+    private Request requestF2 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doFailRequest(requestSession, "F2");
         }
     };
 
-    private Request<String> requestC1 = new Request<String>() {
+    private Request requestC1 = new Request() {
         @Override
-        public void onCall(RequestSession<String> requestSession) {
+        public void onCall(RequestSession requestSession) {
             doLongRequest(requestSession, "C1");
         }
     };
@@ -421,12 +421,12 @@ public class ReqsTest {
     private Reqs.OnDoneListener getOnDoneListener(final String... responses) {
         return new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses1) {
+            public void onSuccess(Reqs reqs, List<Response> responses1) {
                 assertResponseData(reqs, responses);
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
 
             }
         };
@@ -445,12 +445,12 @@ public class ReqsTest {
 
     private Reqs.OnDoneListener emptyDoneListener = new Reqs.OnDoneListener() {
         @Override
-        public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+        public void onSuccess(Reqs reqs, List<Response> responses) {
 
         }
 
         @Override
-        public void onFailure(Response<?> failedResponse) {
+        public void onFailure(Response failedResponse) {
 
         }
     };

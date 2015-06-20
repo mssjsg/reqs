@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by maksing on 14/6/15.
  */
-public class ReqsRequest extends Request<Reqs> {
+public class ReqsRequest extends Request {
 
     private Reqs subReqs;
 
@@ -20,7 +20,7 @@ public class ReqsRequest extends Request<Reqs> {
 
         Reqs.createWithReqs(subReqs).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 if (oldOnDoneListener != null) {
                     oldOnDoneListener.onSuccess(reqs, responses);
                 }
@@ -28,7 +28,7 @@ public class ReqsRequest extends Request<Reqs> {
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 if (oldOnDoneListener != null) {
                     oldOnDoneListener.onFailure(failedResponse);
                 }

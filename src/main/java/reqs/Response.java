@@ -6,21 +6,20 @@ import reqs.RequestSession;
 /**
  * Created by maksing on 14/6/15.
  * A wrapper for the data response
- * @param <E> the expected data type
  */
-public class Response<E> {
-    private final E data;
-    private final RequestSession<E> requestSession;
+public class Response {
+    private final Object data;
+    private final RequestSession requestSession;
     private final Reqs reqs;
 
     /**
      * Constructor
-     * @param response data response
+     * @param data data response
      * @param requestSession the request session of this response
      * @param reqs the current Reqs instance
      */
-    public Response(E response, RequestSession<E> requestSession, Reqs reqs) {
-        this.data = response;
+    public Response(Object data, RequestSession requestSession, Reqs reqs) {
+        this.data = data;
         this.requestSession = requestSession;
         this.reqs = reqs;
     }
@@ -32,17 +31,18 @@ public class Response<E> {
      * @return The data if the data match class c
      */
     public <T> T getData(Class<T> c) {
-        if (c.isInstance(data)) {
-            return (T)data;
+        try {
+            return c.cast(data);
+        } catch (ClassCastException e) {
+            return null;
         }
-        return null;
     }
 
     /**
      * Return response data
      * @return response data
      */
-    public E getData() {
+    public Object getData() {
         return data;
     }
 
@@ -50,7 +50,7 @@ public class Response<E> {
      * return the request session
      * @return the request session
      */
-    public RequestSession<E> getRequestSession() {
+    public RequestSession getRequestSession() {
         return requestSession;
     }
 

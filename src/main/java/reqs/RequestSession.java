@@ -2,20 +2,20 @@ package reqs;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by maksing on 14/6/15.
  * Wrap a Request instance. Every Session instance is unique in a Reqs object.
- * @param <E> The expected data type of the response.
  */
-public class RequestSession<E> {
-    private final Request<E> request;
+public class RequestSession {
+    private final Request request;
     private Reqs reqs;
     private final int id;
 
-    private int currentRetryCount = 0;
+    private AtomicInteger currentRetryCount = new AtomicInteger(0);
 
-    private boolean isDone = false;
+    private volatile boolean isDone = false;
 
     /**
      * Constructor of the session
@@ -24,7 +24,7 @@ public class RequestSession<E> {
      * @param request the request to be called in this session
      * @see Request
      */
-    public RequestSession(int id, Reqs reqs, Request<E> request) {
+    public RequestSession(int id, Reqs reqs, Request request) {
         this.reqs = reqs;
         this.request = request;
         this.id = id;
@@ -42,7 +42,7 @@ public class RequestSession<E> {
      * Mark this request session as done
      * @param data the responded data
      */
-    public void done(E data) {
+    public synchronized void done(Object data) {
         if (!isDone) {
             isDone = true;
             reqs.requestDone(this, data);
@@ -55,7 +55,7 @@ public class RequestSession<E> {
      * Mark this request session as failure, the flow will be interrupted and won't continue.
      * @param data the error response data
      */
-    public void fail(Object data) {
+    public synchronized void fail(Object data) {
         if (!isDone) {
             isDone = true;
             reqs.requestFailed(this, data);
@@ -70,33 +70,29 @@ public class RequestSession<E> {
     public void retry(Object errorData) {
         if (request.getMaxRetryCount() == 0) {
             call();
-        } else if (currentRetryCount < request.getMaxRetryCount()) {
+        } else if (currentRetryCount.get() < request.getMaxRetryCount()) {
             fail(errorData);
         }
     }
 
-    public void failNoRetry(Object data) {
-        currentRetryCount = request.getMaxRetryCount();
+    public synchronized void failNoRetry(Object data) {
+        currentRetryCount.set(request.getMaxRetryCount());
         fail(data);
     }
 
-    void resume() {
-        request.onNext(this, (E) reqs.getResponseById(id).getData());
+    synchronized void resume() {
+        request.onNext(this, reqs.getResponseById(id));
     }
 
-    public Request<E> getRequest() {
+    public Request getRequest() {
         return request;
     }
 
-    <T> void next(final T data) {
-        try {
-            request.onNext(this, (E) data);
-        } catch (ClassCastException e) {
-
-        }
+    <T> void next(final Response response) {
+        request.onNext(this, response);
     }
 
-    void call() {
+    synchronized void call() {
         request.onCall(this);
     }
 
@@ -105,7 +101,7 @@ public class RequestSession<E> {
     }
 
     public int getRetryCount() {
-        return currentRetryCount;
+        return currentRetryCount.get();
     }
 
     /**
@@ -113,7 +109,11 @@ public class RequestSession<E> {
      * @param currentRetryCount
      */
     public void setCurrentRetryCount(int currentRetryCount) {
-        this.currentRetryCount = currentRetryCount;
+        this.currentRetryCount.set(currentRetryCount);
+    }
+
+    void currentRetryCountAddOne() {
+        this.currentRetryCount.getAndAdd(1);
     }
 
     public Reqs getLastStepReqs() {

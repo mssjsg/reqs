@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by maksing on 14/6/15.
  * this is still in progress, please dont use this
  */
-public abstract class AbstractAsyncRequest<Result> extends Request<Result> {
+public abstract class AbstractAsyncRequest<Result> extends Request {
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
     private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;

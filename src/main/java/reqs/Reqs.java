@@ -1,12 +1,10 @@
 package reqs;
-import reqs.util.Debugger;
-import reqs.util.SparseArray;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import reqs.util.Debugger;
+import reqs.util.SparseArray;
 
 /**
  * Created by Sing Mak on 31/5/15.
@@ -43,11 +41,11 @@ public final class Reqs {
 
     private List<RequestsMap> initialRequests = new ArrayList<>();
     List<RequestsMap> requestLists = new ArrayList<>();
-    private SparseArray<Response<?>> responses = new SparseArray<>();
-    SparseArray<Response<?>> currentStepResponses = new SparseArray<>();
-    SparseArray<Response<?>> lastStepResponses = new SparseArray<>();
+    private SparseArray<Response> responses = new SparseArray<>();
+    SparseArray<Response> currentStepResponses = new SparseArray<>();
+    SparseArray<Response> lastStepResponses = new SparseArray<>();
 
-    private List<RequestSession<?>> pendingRequestLists = new ArrayList<>();
+    private List<RequestSession> pendingRequestLists = new ArrayList<>();
 
     private volatile State state = State.IDLE;
 
@@ -59,23 +57,21 @@ public final class Reqs {
     volatile int failedRequestId;
 
     private OnNextListener pendingNext;
-    private List<Response<?>> pendingRequestDone = new ArrayList<>();
-    private Response<?> pendingRequestFail;
+    private List<Response> pendingRequestDone = new ArrayList<>();
+    private Response pendingRequestFail;
 
     private OnDoneListener onDoneListener;
     private OnCancelListener onCancelListener;
     private OnPauseListener onPauseListener;
     private OnResumeListener onResumeListener;
 
-    private Map<Object, Response<?>> responseMap = new HashMap<>(); //TODO put data to the map
-
     /**
      * Place holder request object that do nothing
      */
-    public static Request<Void> EMPTY_REQUEST = new Request<Void>() {
+    public static Request EMPTY_REQUEST = new Request() {
 
         @Override
-        public void onCall(RequestSession<Void> requestSession) {
+        public void onCall(RequestSession requestSession) {
             requestSession.done(null);
         }
     };
@@ -104,9 +100,9 @@ public final class Reqs {
     public static Reqs createWithReqs(Reqs reqs) {
         Reqs reqs1 = Reqs.create();
         for (RequestsMap map : reqs.initialRequests) {
-            List<RequestSession<?>> requestSessions = map.list.getObjects();
+            List<RequestSession> requestSessions = map.list.getObjects();
 
-            Request<?>[] requestsArr = new Request<?>[requestSessions.size()];
+            Request[] requestsArr = new Request[requestSessions.size()];
             for (int i = 0; i < requestSessions.size(); i++) {
                 RequestSession requestSession = requestSessions.get(i);
                 requestsArr[i] = requestSession.getRequest();
@@ -123,23 +119,23 @@ public final class Reqs {
         return reqs1;
     }
 
-    public static <Data> Data getLastStepData(RequestSession<?> session, Class<Data> c) {
+    public static <Data> Data getLastStepData(RequestSession session, Class<Data> c) {
         return session.getReqs().getLastStepData(c);
     }
 
-    public static <Data> List<Data> getLastStepDataList(RequestSession<?> session, Class<Data> c) {
+    public static <Data> List<Data> getLastStepDataList(RequestSession session, Class<Data> c) {
         return session.getReqs().getLastStepDataList(c);
     }
 
-    public static <E> E getData(RequestSession<?> session, Class<E> c) {
+    public static <E> E getData(RequestSession session, Class<E> c) {
         return session.getReqs().getData(c);
     }
 
-    public static <E> List<E> getDataList(RequestSession<?> session, Class<E> c) {
+    public static <E> List<E> getDataList(RequestSession session, Class<E> c) {
         return session.getReqs().getDataList(c);
     }
 
-    public static Reqs getLastStepReqs(RequestSession<?> session) {
+    public static Reqs getLastStepReqs(RequestSession session) {
         return session.getLastStepReqs();
     }
 
@@ -178,11 +174,11 @@ public final class Reqs {
      * @param requests List of Requests to be called in parallel in the first step.
      * @return A new instance of Reqs
      */
-    public static Reqs create(List<Request<?>> requests) {
+    public static Reqs create(List<Request> requests) {
         return create().then(requests);
     }
 
-    private Reqs(List<Request<?>> requests) {
+    private Reqs(List<Request> requests) {
         if (requests.size() > 0) {
             addRequests(requests);
         }
@@ -208,7 +204,7 @@ public final class Reqs {
      * @param requests List of Requests to be added
      * @return the current Reqs instance
      */
-    public Reqs then(List<Request<?>> requests) {
+    public Reqs then(List<Request> requests) {
         return then(convertToRequestsArray(requests));
     }
 
@@ -230,7 +226,7 @@ public final class Reqs {
      * @return the Request to do then
      */
     public Reqs switchRequests(OnSwitchListener... onSwitchListeners) {
-        List<Request<?>> list = new ArrayList<>();
+        List<Request> list = new ArrayList<>();
         for (OnSwitchListener onSwitchListener : onSwitchListeners) {
             list.add(new SwitchRequest(onSwitchListener));
         }
@@ -238,19 +234,19 @@ public final class Reqs {
         return then(list);
     }
 
-    Request<?>[] convertToRequestsArray(List<Request<?>> requests) {
-        Request<?>[] requests1 = new Request<?>[requests.size()];
+    Request[] convertToRequestsArray(List<Request> requests) {
+        Request[] requests1 = new Request[requests.size()];
         for (int i = 0; i < requests.size(); i++) {
             requests1[i] = requests.get(i);
         }
         return requests1;
     }
 
-    private void addRequests(List<Request<?>> requests) {
+    private void addRequests(List<Request> requests) {
         addRequests(convertToRequestsArray(requests));
     }
 
-    private void addRequests(Request<?>[] requests) {
+    private void addRequests(Request[] requests) {
         int id = getNextId();
         requestLists.add(new RequestsMap(id, this, requests));
         initialRequests.add(new RequestsMap(id, this, requests));
@@ -306,7 +302,7 @@ public final class Reqs {
             RequestsMap requestsMap = requestLists.get(0);
             calling = true;
             for (int i = 0; i < requestsMap.list.size(); i++) {
-                SparseArray<RequestSession<?>> map = requestsMap.list;
+                SparseArray<RequestSession> map = requestsMap.list;
                 RequestSession requestSession = map.get(map.keyAt(i));
                 requestSession.call();
                 log("session.request.onCall: requestsMap.list:" + requestsMap.list.size());
@@ -318,7 +314,7 @@ public final class Reqs {
                 if (pendingRequestDone.size() > 0) {
                     while (pendingRequestDone.size() > 0) {
                         log("pendingRequestDone: " + pendingRequestDone.size());
-                        Response<?> response = pendingRequestDone.get(0);
+                        Response response = pendingRequestDone.get(0);
                         pendingRequestDone.remove(0);
                         requestDone(response.getRequestSession(), response.getData(), true);
                     }
@@ -326,7 +322,7 @@ public final class Reqs {
             }
 
             if (pendingRequestFail != null) {
-                Response<?> response = pendingRequestFail;
+                Response response = pendingRequestFail;
                 pendingRequestFail = null;
                 requestFailed(response.getRequestSession(), response.getData());
             }
@@ -361,13 +357,13 @@ public final class Reqs {
 
     private <E> void requestDone(RequestSession requestSession, E data, boolean noCheckForPending) {
 
-        if (isIdle() || isCompleted()) {
+        if (isIdle() || isCompleted() || isCancelled()) {
             return;
         }
 
         int requestId = requestSession.getId();
 
-        Request<?> request = null;
+        Request request = null;
         if (requestSession != null) {
             request = requestSession.getRequest();
         }
@@ -383,22 +379,24 @@ public final class Reqs {
             return;
         }
 
+        Response response = new Response(data, requestSession, this);
+
         if (calling) {
-            pendingRequestDone.add(new Response<E>(data, requestSession, this));
+            pendingRequestDone.add(response);
             return;
         }
 
         if (state == State.PAUSED) {
             pendingRequestLists.add(requestSession);
         } else {
-            requestSession.next(data);
+            requestSession.next(response);
         }
 
-        Response<E> response = new Response<E>(data, requestSession, this);
+
 
         currentStepResponses.put(requestId, response);
         responses.put(requestId, response);
-        SparseArray<RequestSession<?>> map = requestLists.get(0).list;
+        SparseArray<RequestSession> map = requestLists.get(0).list;
 
         map.remove(requestId);
         if (map.size() == 0) {
@@ -429,9 +427,9 @@ public final class Reqs {
         }
     }
 
-    public synchronized void requestFailed(RequestSession<?> requestSession, Object data) {
+    public synchronized void requestFailed(RequestSession requestSession, Object data) {
 
-        if (isIdle() || isCompleted()) {
+        if (isIdle() || isCompleted() || isCancelled()) {
             return;
         }
 
@@ -466,16 +464,16 @@ public final class Reqs {
      * Return the Response objects in last step
      * @return The Response objects in last step
      */
-    public List<Response<?>> getResponseList() {
-        final List<Response<?>> responseList = new ArrayList<>();
+    public List<Response> getResponseList() {
+        final List<Response> responseList = new ArrayList<>();
         for (int i = 0; i < responses.size(); i++) {
             responseList.add(responses.get(responses.keyAt(i)));
         }
         return responseList;
     }
 
-    private List<Response<?>> getResponseList(int[] keys) {
-        final List<Response<?>> responseList = new ArrayList<>();
+    private List<Response> getResponseList(int[] keys) {
+        final List<Response> responseList = new ArrayList<>();
         for (int i = 0; i < responses.size(); i++) {
             int key = responses.keyAt(i);
             for (int k : keys) {
@@ -492,7 +490,7 @@ public final class Reqs {
         state = State.COMPLETED;
         if (onDoneListener != null) {
             if (!failed) {
-                final List<Response<?>> responseList = getResponseList();
+                final List<Response> responseList = getResponseList();
                 onDoneListener.onSuccess(Reqs.this, responseList);
             } else {
                 onDoneListener.onFailure(getResponseById(failedRequestId));
@@ -513,7 +511,7 @@ public final class Reqs {
      * Cancel the flow. Please note that the flow cannot be started again after this. Every Reqs can only start once.
      */
     public synchronized void cancel() {
-        if (!isIdle() && !isCompleted()) {
+        if (!isIdle() && !isCompleted() && !isCancelled()) {
             log("cancel");
             state = State.CANCELLED;
             if (onCancelListener != null) {
@@ -573,7 +571,7 @@ public final class Reqs {
                 onResumeListener.onResume(this);
             }
 
-            for (RequestSession<?> requestSession : pendingRequestLists) {
+            for (RequestSession requestSession : pendingRequestLists) {
                 requestSession.resume();
             }
             pendingRequestLists.clear();
@@ -599,8 +597,8 @@ public final class Reqs {
         Debugger.log("REQS:>" + message);
     }
 
-    public <E> Response<E> getResponseById(int requestId) {
-        return (Response<E>) responses.get(requestId);
+    public Response getResponseById(int requestId) {
+        return responses.get(requestId);
     }
 
     /**
@@ -609,12 +607,13 @@ public final class Reqs {
      * @param <E> the class of the data to be matched
      * @return The first object in the list of response that match the Class c or null otherwise.
      */
+    @SuppressWarnings("unchecked")
     public <E> E getData(Class<E> c) {
 
         E data = getLastStepData(c);
         if (data == null) {
             for (int i = 0; i < responses.size(); i++) {
-                Response<?> response = responses.get(responses.keyAt(i));
+                Response response = responses.get(responses.keyAt(i));
                 if (c.isInstance(response.getData())) {
                     return (E) response.getData();
                 }
@@ -629,10 +628,11 @@ public final class Reqs {
      * @param <E> the class of the data to be matched
      * @return The list of objects in the list of response that match the Class c or null otherwise.
      */
+    @SuppressWarnings("unchecked")
     public <E> List<E> getDataList(Class<E> c) {
         List<E> list = new ArrayList<>();
         for (int i = 0; i < responses.size(); i++) {
-            Response<?> response = responses.get(responses.keyAt(i));
+            Response response = responses.get(responses.keyAt(i));
             if (c.isInstance(response.getData())) {
                 list.add((E)response.getData());
             } else if (response.getData() instanceof List) {
@@ -653,6 +653,7 @@ public final class Reqs {
      * @param <E>
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <E> E getLastStepData(Class<E> c) {
         if (lastStepResponses.size() > 0) {
             for (int i = 0; i < lastStepResponses.size(); i++) {
@@ -698,15 +699,16 @@ public final class Reqs {
      * return all the responses
      * @return all the responses
      */
-    public SparseArray<Response<?>> getAllResponses() {
+    public SparseArray<Response> getAllResponses() {
         return responses;
     }
 
+    @SuppressWarnings("unchecked")
     public <E> List<E> getLastStepDataList(Class<E> c) {
         List<E> list = new ArrayList<>();
 
         for (int i = 0; i < lastStepResponses.size(); i++) {
-            Response<?> response = lastStepResponses.getObjects().get(i);
+            Response response = lastStepResponses.getObjects().get(i);
             if (c.isInstance(response.getData())) {
                 list.add((E) response.getData());
             } else if (response.getData() instanceof List) {
@@ -722,7 +724,7 @@ public final class Reqs {
         return list;
     }
 
-    private Response<?> getLastStepResponse() {
+    private Response getLastStepResponse() {
         if (lastStepResponses.size() > 0) {
             return lastStepResponses.getObjects().get(0);
         } else {
@@ -730,11 +732,11 @@ public final class Reqs {
         }
     }
 
-    private List<Response<?>> getLastStepResponseList() {
-        List<Response<?>> list = new ArrayList<>();
+    private List<Response> getLastStepResponseList() {
+        List<Response> list = new ArrayList<>();
 
         for (int i = 0; i < lastStepResponses.size(); i++) {
-            Response<?> response = lastStepResponses.getObjects().get(i);
+            Response response = lastStepResponses.getObjects().get(i);
             list.add(response);
         }
 
@@ -742,7 +744,7 @@ public final class Reqs {
     }
 
     static class RequestsMap {
-        SparseArray<RequestSession<?>> list = new SparseArray<>();
+        SparseArray<RequestSession> list = new SparseArray<>();
         OnNextListener onNextListener;
         int[] keys;
 
@@ -750,8 +752,8 @@ public final class Reqs {
             int  id = baseId;
             keys = new int[requests.length];
             int i = 0;
-            for (Request<?> request : requests) {
-                RequestSession<?> requestSession = new RequestSession<>(id, reqs, request);
+            for (Request request : requests) {
+                RequestSession requestSession = new RequestSession(id, reqs, request);
                 list.put(id, requestSession);
                 keys[i] = id;
                 id++;
@@ -759,10 +761,10 @@ public final class Reqs {
             }
         }
 
-        public List<Response<?>> getResponses(Reqs reqs) {
-            List<Response<?>> resps = new ArrayList<>();
+        public List<Response> getResponses(Reqs reqs) {
+            List<Response> resps = new ArrayList<>();
             for (int i = 0; i < reqs.responses.size(); i++) {
-                Response<?> response = reqs.responses.get(reqs.responses.keyAt(i));
+                Response response = reqs.responses.get(reqs.responses.keyAt(i));
                 if (keys[i] == response.getRequestSession().getId()) {
                     resps.add(response);
                 }
@@ -781,7 +783,7 @@ public final class Reqs {
          * @param reqs
          * @return a request that define the conditions to perform different request. proceed to next request if return null.
          */
-        Request<?> onSwitch(Reqs reqs);
+        Request onSwitch(Reqs reqs);
     }
 
     /**
@@ -834,7 +836,7 @@ public final class Reqs {
          * @param reqs current Reqs instance
          * @param responses all responses data fetched in last step
          */
-        void onNext(Reqs reqs, List<Response<?>> responses);
+        void onNext(Reqs reqs, List<Response> responses);
     }
 
     /**
@@ -846,13 +848,13 @@ public final class Reqs {
          * @param reqs
          * @param responses
          */
-        void onSuccess(Reqs reqs, List<Response<?>> responses);
+        void onSuccess(Reqs reqs, List<Response> responses);
 
         /**
          * Define what to do when the flow is failed. This is called when any session.fail(errorData) is called.
          * @param failedResponse
          */
-        void onFailure(Response<?> failedResponse);
+        void onFailure(Response failedResponse);
     }
 
     public OnDoneListener getOnDoneListener() {

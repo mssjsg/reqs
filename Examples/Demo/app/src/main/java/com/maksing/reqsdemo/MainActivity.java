@@ -24,21 +24,21 @@ public class MainActivity extends Activity {
 
     private Handler handler = new Handler(Looper.getMainLooper());
 
-    private Request<Data> requestX = new Request<Data>() {
+    private Request requestX = new Request() {
         @Override
         public void onCall(RequestSession requestSession) {
             doRequest("X", requestSession);
         }
     };
 
-    private Request<Data> requestY = new Request<Data>() {
+    private Request requestY = new Request() {
         @Override
         public void onCall(RequestSession requestSession) {
             doRequest("Y", requestSession);
         }
     };
 
-    private List<Request<?>> requestList = new ArrayList<>();
+    private List<Request> requestList = new ArrayList<>();
     {
         requestList.add(requestX);
         requestList.add(requestY);
@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
             }
         }.retry(3)).next(new Reqs.OnNextListener() {
             @Override
-            public void onNext(Reqs reqs, List<Response<?>> responses) {
+            public void onNext(Reqs reqs, List<Response> responses) {
                 log("I am still here.");
             }
         }).then(new ReqsRequest(Reqs.create(new Request() {
@@ -147,21 +147,21 @@ public class MainActivity extends Activity {
             }
         })).switchRequests(new Reqs.OnSwitchListener() {
             @Override
-            public Request<Data> onSwitch(Reqs reqs) {
+            public Request onSwitch(Reqs reqs) {
 
                 boolean happy = true;
 
                 if (happy) {
-                    return new Request<Data>() {
+                    return new Request() {
                         @Override
-                        public void onCall(RequestSession<Data> session) {
+                        public void onCall(RequestSession session) {
                             session.done(new Data("happy"));
                         }
                     };
                 } else {
-                    return new Request<Data>() {
+                    return new Request() {
                         @Override
-                        public void onCall(RequestSession<Data> session) {
+                        public void onCall(RequestSession session) {
                             session.done(new Data("sad"));
                         }
                     };
@@ -170,12 +170,12 @@ public class MainActivity extends Activity {
             }
         }, new Reqs.OnSwitchListener() {
             @Override
-            public Request<Object> onSwitch(Reqs reqs) {
+            public Request onSwitch(Reqs reqs) {
                 return null;
             }
         }).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 String resp = "";
 
                 List<Data> dataList = reqs.getDataList(Data.class);
@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 log("flow 1 failed");
             }
         });
@@ -221,39 +221,39 @@ public class MainActivity extends Activity {
     }
 
     private Reqs getRequests2() {
-        Reqs reqs = Reqs.create().then(new Request<Data>() {
+        Reqs reqs = Reqs.create().then(new Request() {
             @Override
             public void onCall(RequestSession session) {
                 doRequest("1", session);
             }
 
             @Override
-            public void onNext(RequestSession session, Data response) {
+            public void onNext(RequestSession session, Response response) {
                 super.onNext(session, response);
                 log("Request 1 haha");
             }
-        }, new Request<Data>() {
+        }, new Request() {
             @Override
             public void onCall(RequestSession session) {
                 doRequest("2", session);
             }
-        }, new Request<Data>() {
+        }, new Request() {
             @Override
             public void onCall(RequestSession session) {
                 doRequest("3", session);
             }
         }).next(new Reqs.OnNextListener() {
             @Override
-            public void onNext(Reqs reqs, List<Response<?>> responses) {
+            public void onNext(Reqs reqs, List<Response> responses) {
                 log("Request 1, 2, 3 done! response size:" + responses.size());
             }
-        }).then(new Request<Data>() {
+        }).then(new Request() {
 
             @Override
             public void onCall(RequestSession session) {
                 doRequest("4", session);
             }
-        }).then(new Request<Data>() {
+        }).then(new Request() {
 
             @Override
             public void onCall(RequestSession session) {
@@ -261,12 +261,12 @@ public class MainActivity extends Activity {
             }
         }).then(requestList).next(new Reqs.OnNextListener() {
             @Override
-            public void onNext(Reqs reqs, List<Response<?>> responses) {
+            public void onNext(Reqs reqs, List<Response> responses) {
                 log("Request X, Y done! response size:" + responses.size());
             }
         }).done(new Reqs.OnDoneListener() {
             @Override
-            public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+            public void onSuccess(Reqs reqs, List<Response> responses) {
                 String resp = "";
 
                 List<Data> dataList = reqs.getDataList(Data.class);
@@ -279,7 +279,7 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onFailure(Response<?> failedResponse) {
+            public void onFailure(Response failedResponse) {
                 log("Requests Failed, cannot continue.");
             }
         });
@@ -308,6 +308,7 @@ public class MainActivity extends Activity {
         return reqs;
     }
 
+    @SuppressWarnings("unchecked")
     private <E> E findView(int id) {
         return (E)super.findViewById(id);
     }

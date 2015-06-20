@@ -7,10 +7,9 @@ import java.util.List;
 /**
  * Created by maksing on 14/6/15.
  * Implement this abstract class to define what to do in the request.
- * @param <Result> the expected response data type.
  */
-public abstract class Request<Result> {
-    protected final Class<Result> expectResponseType;
+public abstract class Request {
+    protected final Class<?> expectResponseType;
     protected int maxRetryCount;
 
     /**
@@ -24,7 +23,7 @@ public abstract class Request<Result> {
      * Constructor, the response data type will need to match expectResponseType or the flow will be interrupted.
      * @param expectResponseType the class type to match the response data.
      */
-    public Request(Class<Result> expectResponseType) {
+    public Request(Class<?> expectResponseType) {
         this.expectResponseType = expectResponseType;
     }
 
@@ -32,22 +31,22 @@ public abstract class Request<Result> {
      * Define what to do in the request. session object is provided so that session.done(data) or session.fail(errorData) can be called to finish the request session.
      * @param requestSession the session instance that wrap this request.
      */
-    public abstract void onCall(RequestSession<Result> requestSession);
+    public abstract void onCall(RequestSession requestSession);
 
     /**
      * Can override to provide handle when the request is done successfully before proceed to next request in the flow.
      * @param requestSession
-     * @param data
+     * @param response
      */
-    public void onNext(RequestSession<Result> requestSession, Result data) {
-        Debugger.log("Request " + requestSession.getId() + " responsed!! class: " + (data == null ? "null" : data.getClass() + " value: " + data));
+    public void onNext(RequestSession requestSession, Response response) {
+        Debugger.log("Request " + requestSession.getId() + " responsed!! class: " + (response.getData() == null ? "null" : response.getData().getClass() + " value: " + response.getData()));
     }
 
     /**
      * Can override to provide handling of failure of this request
      * @param errorResponse
      */
-    public void onFailure(RequestSession<?> requestSession, Response<?> errorResponse) {
+    public void onFailure(RequestSession requestSession, Response errorResponse) {
         Debugger.log("Failed error response:" + errorResponse.getData());
     }
 
@@ -57,11 +56,11 @@ public abstract class Request<Result> {
      * @param retryCount number of retries to do after this request failed before proceed to next step.
      * @return a new Request object that can do retry.
      */
-    public Request<Result> retry(int retryCount) {
-        return new RetryRequest<Result>(this, retryCount);
+    public Request retry(int retryCount) {
+        return new RetryRequest(this, retryCount);
     }
 
-    public Class<Result> getExpectResponseType() {
+    public Class<?> getExpectResponseType() {
         return expectResponseType;
     }
 
@@ -73,34 +72,34 @@ public abstract class Request<Result> {
         return maxRetryCount;
     }
 
-    static class RetryRequest<E> extends Request<E> {
+    static class RetryRequest extends Request {
         private RequestSession requestSession;
-        private Request<E> request;
+        private Request request;
 
-        public RetryRequest(final Request<E> request, final int maxRetryCount) {
+        public RetryRequest(final Request request, final int maxRetryCount) {
             this.maxRetryCount = maxRetryCount;
             this.request = request;
         }
 
-        private void doRequest(final Request<E> request) {
+        private void doRequest(final Request request) {
 
             Reqs.create(new Request() {
                 @Override
                 public void onCall(RequestSession requestSession) {
-                    RetrySession<E> retrySession = new RetrySession<E>(requestSession, RetryRequest.this.requestSession.getReqs());
+                    RetrySession retrySession = new RetrySession(requestSession, RetryRequest.this.requestSession.getReqs());
                     retrySession.setCurrentRetryCount(RetryRequest.this.requestSession.getRetryCount());
                     request.onCall(retrySession);
                 }
             }).done(new Reqs.OnDoneListener() {
                 @Override
-                public void onSuccess(Reqs reqs, List<Response<?>> responses) {
+                public void onSuccess(Reqs reqs, List<Response> responses) {
                     requestSession.done(reqs.getAllResponses().size() == 0 ? null : reqs.getAllResponses().get(0).getData());
                 }
 
                 @Override
-                public void onFailure(Response<?> failedResponse) {
+                public void onFailure(Response failedResponse) {
                     if (requestSession.getRetryCount() < maxRetryCount) {
-                        requestSession.setCurrentRetryCount(requestSession.getRetryCount() + 1);
+                        requestSession.currentRetryCountAddOne();
                         request.onFailure(requestSession, failedResponse);
                         doRequest(request);
                     } else {
@@ -111,29 +110,29 @@ public abstract class Request<Result> {
         }
 
         @Override
-        public void onCall(RequestSession<E> requestSession) {
+        public void onCall(RequestSession requestSession) {
             this.requestSession = requestSession;
             doRequest(request);
         }
 
         @Override
-        public void onNext(RequestSession<E> requestSession, E data) {
+        public void onNext(RequestSession requestSession, Response data) {
             request.onNext(requestSession, data);
         }
 
-        static class RetrySession<E> extends RequestSession<E> {
+        static class RetrySession extends RequestSession {
 
             Reqs mainReqs;
             RequestSession requestSession;
 
-            public RetrySession(RequestSession<E> requestSession, Reqs mainReqs) {
+            public RetrySession(RequestSession requestSession, Reqs mainReqs) {
                 super(requestSession.getId(), requestSession.getReqs(), requestSession.getRequest());
                 this.requestSession = requestSession;
                 this.mainReqs = mainReqs;
             }
 
             @Override
-            public void done(E data) {
+            public void done(Object data) {
                 super.done(data);
             }
 
