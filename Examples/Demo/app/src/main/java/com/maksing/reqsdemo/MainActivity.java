@@ -44,9 +44,199 @@ public class MainActivity extends Activity {
         requestList.add(requestY);
     }
 
-    private Reqs reqs1 = getRequests1();
+    private Reqs reqs1 = Reqs.create(new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("initializing", session);
+        }
+    }, new Request() {
+        @Override
+        public void onCall(RequestSession session) {
 
-    private Reqs reqs = Reqs.createWithReqs(reqs1);
+            doRequest("signin...", session);
+        }
+    }).then(new Request() {
+
+        @Override
+        public void onCall(RequestSession session) {
+            Data data = session.getReqs().getLastStepData(Data.class);
+            List<Data> dataList = session.getReqs().getLastStepDataList(Data.class);
+
+            if (session.getRetryCount() == 3) {
+                doRequest("retry success!!", session);
+            } else {
+                doRequest("", session);
+            }
+        }
+
+        @Override
+        public void onFailure(RequestSession session, Response errorResponse) {
+            super.onFailure(session, errorResponse);
+            log("Failure!!! retry:" + session.getRetryCount());
+        }
+    }.retry(3)).next(new Reqs.OnNextListener() {
+        @Override
+        public void onNext(Reqs reqs, List<Response> responses) {
+            log("I am still here.");
+        }
+    }).then(new ReqsRequest(Reqs.create(new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("sub flow 1", session);
+        }
+    })), new ReqsRequest(Reqs.create(new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("sub flow 2", session);
+        }
+    }))).thenReqs(Reqs.create(new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("sub flow 3", session);
+        }
+    })).switchRequests(new Reqs.OnSwitchListener() {
+        @Override
+        public Request onSwitch(Reqs reqs) {
+
+            boolean happy = true;
+
+            if (happy) {
+                return new Request() {
+                    @Override
+                    public void onCall(RequestSession session) {
+                        session.done(new Data("happy"));
+                    }
+                };
+            } else {
+                return new Request() {
+                    @Override
+                    public void onCall(RequestSession session) {
+                        session.done(new Data("sad"));
+                    }
+                };
+            }
+
+        }
+    }, new Reqs.OnSwitchListener() {
+        @Override
+        public Request onSwitch(Reqs reqs) {
+            return null;
+        }
+    }).done(new Reqs.OnDoneListener() {
+        @Override
+        public void onSuccess(Reqs reqs, List<Response> responses) {
+            String resp = "";
+
+            List<Data> dataList = reqs.getDataList(Data.class);
+            for (Data data : dataList) {
+                resp = resp + data.str + "\n";
+            }
+
+            log("all requests done. responses:\n" + resp);
+
+            log("flow 1 done. do flow 2 now");
+        }
+
+        @Override
+        public void onFailure(Response failedResponse) {
+            log("flow 1 failed");
+        }
+    }).setOnCancelListener(new Reqs.OnCancelListener() {
+        @Override
+        public void onCancel(Reqs reqs) {
+            log("cancelled");
+        }
+    }).setOnPauseListener(new Reqs.OnPauseListener() {
+        @Override
+        public void onPause(Reqs reqs) {
+            log("paused");
+        }
+    }).setOnResumeListener(new Reqs.OnResumeListener() {
+        @Override
+        public void onResume(Reqs reqs) {
+            log("resume");
+        }
+    });
+
+    private Reqs reqs2 = Reqs.create().then(new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("1", session);
+        }
+
+        @Override
+        public void onNext(RequestSession session, Response response) {
+            super.onNext(session, response);
+            log("Request 1 haha");
+        }
+    }, new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("2", session);
+        }
+    }, new Request() {
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("3", session);
+        }
+    }).next(new Reqs.OnNextListener() {
+        @Override
+        public void onNext(Reqs reqs, List<Response> responses) {
+            log("Request 1, 2, 3 done! response size:" + responses.size());
+        }
+    }).then(new Request() {
+
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("4", session);
+        }
+    }).then(new Request() {
+
+        @Override
+        public void onCall(RequestSession session) {
+            doRequest("5", session);
+        }
+    }).then(requestList).next(new Reqs.OnNextListener() {
+        @Override
+        public void onNext(Reqs reqs, List<Response> responses) {
+            log("Request X, Y done! response size:" + responses.size());
+        }
+    }).done(new Reqs.OnDoneListener() {
+        @Override
+        public void onSuccess(Reqs reqs, List<Response> responses) {
+            String resp = "";
+
+            List<Data> dataList = reqs.getDataList(Data.class);
+
+            for (Data data : dataList) {
+                resp = resp + data.str + "\n";
+            }
+
+            log("all requests done. responses:\n" + resp);
+        }
+
+        @Override
+        public void onFailure(Response failedResponse) {
+            log("Requests Failed, cannot continue.");
+        }
+    }).setOnCancelListener(new Reqs.OnCancelListener() {
+        @Override
+        public void onCancel(Reqs reqs) {
+            log("cancelled");
+        }
+    }).setOnPauseListener(new Reqs.OnPauseListener() {
+        @Override
+        public void onPause(Reqs reqs) {
+            log("paused");
+        }
+    }).setOnResumeListener(new Reqs.OnResumeListener() {
+        @Override
+        public void onResume(Reqs reqs) {
+            log("resume");
+        }
+    });
+
+    private Reqs reqs = Reqs.create().thenReqs(reqs1).thenReqs(reqs2);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,219 +283,6 @@ public class MainActivity extends Activity {
         });
 
         reqs.start();
-    }
-
-    private Reqs getRequests1() {
-        Reqs reqs = Reqs.create(new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("Welcome", session);
-            }
-        }, new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("Hello", session);
-            }
-        }).then(new Request() {
-
-            @Override
-            public void onCall(RequestSession session) {
-                Data data = session.getReqs().getLastStepData(Data.class);
-                List<Data> dataList = session.getReqs().getLastStepDataList(Data.class);
-
-                if (session.getRetryCount() == 3) {
-                    doRequest("retry success!!", session);
-                } else {
-                    doRequest("", session);
-                }
-            }
-
-            @Override
-            public void onFailure(RequestSession session, Response errorResponse) {
-                super.onFailure(session, errorResponse);
-                log("Failure!!! retry:" + session.getRetryCount());
-            }
-        }.retry(3)).next(new Reqs.OnNextListener() {
-            @Override
-            public void onNext(Reqs reqs, List<Response> responses) {
-                log("I am still here.");
-            }
-        }).then(new ReqsRequest(Reqs.create(new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("sub flow 1", session);
-            }
-        })), new ReqsRequest(Reqs.create(new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("sub flow 2", session);
-            }
-        }))).thenReqs(Reqs.create(new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("sub flow 3", session);
-            }
-        })).switchRequests(new Reqs.OnSwitchListener() {
-            @Override
-            public Request onSwitch(Reqs reqs) {
-
-                boolean happy = true;
-
-                if (happy) {
-                    return new Request() {
-                        @Override
-                        public void onCall(RequestSession session) {
-                            session.done(new Data("happy"));
-                        }
-                    };
-                } else {
-                    return new Request() {
-                        @Override
-                        public void onCall(RequestSession session) {
-                            session.done(new Data("sad"));
-                        }
-                    };
-                }
-
-            }
-        }, new Reqs.OnSwitchListener() {
-            @Override
-            public Request onSwitch(Reqs reqs) {
-                return null;
-            }
-        }).done(new Reqs.OnDoneListener() {
-            @Override
-            public void onSuccess(Reqs reqs, List<Response> responses) {
-                String resp = "";
-
-                List<Data> dataList = reqs.getDataList(Data.class);
-                for (Data data : dataList) {
-                    resp = resp + data.str + "\n";
-                }
-
-                log("all requests done. responses:\n" + resp);
-
-                log("flow 1 done. do flow 2 now");
-                MainActivity.this.reqs = getRequests2();
-                MainActivity.this.reqs.start();
-            }
-
-            @Override
-            public void onFailure(Response failedResponse) {
-                log("flow 1 failed");
-            }
-        });
-
-        reqs.setOnCancelListener(new Reqs.OnCancelListener() {
-            @Override
-            public void onCancel(Reqs reqs) {
-                log("cancelled");
-            }
-        });
-
-        reqs.setOnPauseListener(new Reqs.OnPauseListener() {
-            @Override
-            public void onPause(Reqs reqs) {
-                log("paused");
-            }
-        });
-
-        reqs.setOnResumeListener(new Reqs.OnResumeListener() {
-            @Override
-            public void onResume(Reqs reqs) {
-                log("resume");
-            }
-        });
-
-        return reqs;
-    }
-
-    private Reqs getRequests2() {
-        Reqs reqs = Reqs.create().then(new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("1", session);
-            }
-
-            @Override
-            public void onNext(RequestSession session, Response response) {
-                super.onNext(session, response);
-                log("Request 1 haha");
-            }
-        }, new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("2", session);
-            }
-        }, new Request() {
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("3", session);
-            }
-        }).next(new Reqs.OnNextListener() {
-            @Override
-            public void onNext(Reqs reqs, List<Response> responses) {
-                log("Request 1, 2, 3 done! response size:" + responses.size());
-            }
-        }).then(new Request() {
-
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("4", session);
-            }
-        }).then(new Request() {
-
-            @Override
-            public void onCall(RequestSession session) {
-                doRequest("5", session);
-            }
-        }).then(requestList).next(new Reqs.OnNextListener() {
-            @Override
-            public void onNext(Reqs reqs, List<Response> responses) {
-                log("Request X, Y done! response size:" + responses.size());
-            }
-        }).done(new Reqs.OnDoneListener() {
-            @Override
-            public void onSuccess(Reqs reqs, List<Response> responses) {
-                String resp = "";
-
-                List<Data> dataList = reqs.getDataList(Data.class);
-
-                for (Data data : dataList) {
-                    resp = resp + data.str + "\n";
-                }
-
-                log("all requests done. responses:\n" + resp);
-            }
-
-            @Override
-            public void onFailure(Response failedResponse) {
-                log("Requests Failed, cannot continue.");
-            }
-        });
-
-        reqs.setOnCancelListener(new Reqs.OnCancelListener() {
-            @Override
-            public void onCancel(Reqs reqs) {
-                log("cancelled");
-            }
-        });
-
-        reqs.setOnPauseListener(new Reqs.OnPauseListener() {
-            @Override
-            public void onPause(Reqs reqs) {
-                log("paused");
-            }
-        });
-
-        reqs.setOnResumeListener(new Reqs.OnResumeListener() {
-            @Override
-            public void onResume(Reqs reqs) {
-                log("resume");
-            }
-        });
-
-        return reqs;
     }
 
     @SuppressWarnings("unchecked")

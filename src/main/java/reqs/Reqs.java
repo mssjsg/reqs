@@ -524,24 +524,27 @@ public final class Reqs {
      * Define what to do when the flow is cancelled
      * @param onCancelListener
      */
-    public void setOnCancelListener(OnCancelListener onCancelListener) {
+    public Reqs setOnCancelListener(OnCancelListener onCancelListener) {
         this.onCancelListener = onCancelListener;
+        return this;
     }
 
     /**
      * Define what to do when the flow is paused
      * @param onPauseListener
      */
-    public void setOnPauseListener(OnPauseListener onPauseListener) {
+    public Reqs setOnPauseListener(OnPauseListener onPauseListener) {
         this.onPauseListener = onPauseListener;
+        return this;
     }
 
     /**
      * Define what to do when the flow is resumed
      * @param onResumeListener
      */
-    public void setOnResumeListener(OnResumeListener onResumeListener) {
+    public Reqs setOnResumeListener(OnResumeListener onResumeListener) {
         this.onResumeListener = onResumeListener;
+        return this;
     }
 
     /**
