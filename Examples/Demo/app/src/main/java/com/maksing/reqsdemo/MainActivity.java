@@ -167,7 +167,8 @@ public class MainActivity extends Activity {
         @Override
         public void onNext(RequestSession session, Response response) {
             super.onNext(session, response);
-            log("Request 1 haha");
+
+            log(response.getData(Data.class).toString());
         }
     }, new Request() {
         @Override
