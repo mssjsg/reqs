@@ -11,6 +11,7 @@ import java.util.List;
 public abstract class Request {
     protected final Class<?> expectResponseType;
     protected int maxRetryCount;
+    protected boolean pausable = false;
 
     /**
      * Default constructor, no validation of the response type
@@ -78,12 +79,13 @@ public abstract class Request {
 
         public RetryRequest(final Request request, final int maxRetryCount) {
             this.maxRetryCount = maxRetryCount;
+            this.pausable = true;
             this.request = request;
         }
 
         private void doRequest(final Request request) {
 
-            Reqs.create(new Request() {
+            Reqs reqs = Reqs.create(new Request() {
                 @Override
                 public void onCall(RequestSession requestSession) {
                     RetrySession retrySession = new RetrySession(requestSession, RetryRequest.this.requestSession.getReqs());
@@ -106,7 +108,10 @@ public abstract class Request {
                         requestSession.fail(failedResponse);
                     }
                 }
-            }).start();
+            });
+
+            requestSession.setSubReqs(reqs);
+            reqs.start();
         }
 
         @Override

@@ -10,7 +10,12 @@ public class ReqsRequest extends Request {
     private Reqs subReqs;
 
     public ReqsRequest(Reqs reqs) {
+        this(reqs, false);
+    }
+
+    public ReqsRequest(Reqs reqs, boolean pausable) {
         super(Reqs.class);
+        this.pausable = pausable;
         this.subReqs = Reqs.createWithReqs(reqs);
     }
 
@@ -18,7 +23,7 @@ public class ReqsRequest extends Request {
     public void onCall(final RequestSession requestSession) {
         final Reqs.OnDoneListener oldOnDoneListener = subReqs.getOnDoneListener();
 
-        Reqs.createWithReqs(subReqs).done(new Reqs.OnDoneListener() {
+        Reqs reqs = Reqs.createWithReqs(subReqs).done(new Reqs.OnDoneListener() {
             @Override
             public void onSuccess(Reqs reqs, List<Response> responses) {
                 if (oldOnDoneListener != null) {
@@ -34,6 +39,9 @@ public class ReqsRequest extends Request {
                 }
                 requestSession.fail(failedResponse.getData());
             }
-        }).start();
+        });
+        requestSession.setSubReqs(reqs);
+        reqs.start();
+
     }
 }

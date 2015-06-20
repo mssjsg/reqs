@@ -200,6 +200,16 @@ public final class Reqs {
     }
 
     /**
+     * to treat a requests flow a sub-flow of this Reqs object so that pausing the main flow won't interrupt this sub flow
+     * @param reqs
+     * @param pausable to declare if this sub-flow should be paused when the main flow is paused
+     * @return the current Reqs object
+     */
+    public Reqs thenReqs(final Reqs reqs, boolean pausable) {
+        return then(new ReqsRequest(reqs, pausable));
+    }
+
+    /**
      * Add new Requests to the current Reqs instance and create new Session objects for each Request
      * @param requests List of Requests to be added
      * @return the current Reqs instance
@@ -555,6 +565,14 @@ public final class Reqs {
         if (state == State.REQUESTING) {
             log("pause");
             state = State.PAUSED;
+
+            if (requestLists.size() > 0) {
+                List<RequestSession> sessions = requestLists.get(0).list.getObjects();
+                for (RequestSession session : sessions) {
+                    session.pauseSubReqs();
+                }
+            }
+
             if (onPauseListener != null) {
                 onPauseListener.onPause(this);
             }
@@ -574,8 +592,15 @@ public final class Reqs {
                 onResumeListener.onResume(this);
             }
 
+            if (requestLists.size() > 0) {
+                List<RequestSession> sessions = requestLists.get(0).list.getObjects();
+                for (RequestSession session : sessions) {
+                    session.resumeSubReqs();
+                }
+            }
+
             for (RequestSession requestSession : pendingRequestLists) {
-                requestSession.resume();
+                requestSession.resumeNext();
             }
             pendingRequestLists.clear();
 

@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RequestSession {
     private final Request request;
     private Reqs reqs;
+    private Reqs subReqs;
     private final int id;
 
     private AtomicInteger currentRetryCount = new AtomicInteger(0);
@@ -80,15 +81,27 @@ public class RequestSession {
         fail(data);
     }
 
-    synchronized void resume() {
+    synchronized void resumeNext() {
         request.onNext(this, reqs.getResponseById(id));
+    }
+
+    synchronized void resumeSubReqs() {
+        if (subReqs != null) {
+            subReqs.resume();
+        }
+    }
+
+    synchronized void pauseSubReqs() {
+        if (subReqs != null && request.pausable) {
+            subReqs.pause();
+        }
     }
 
     public Request getRequest() {
         return request;
     }
 
-    <T> void next(final Response response) {
+    void next(final Response response) {
         request.onNext(this, response);
     }
 
@@ -124,4 +137,7 @@ public class RequestSession {
         return reqs.getLastStepReqsList();
     }
 
+    void setSubReqs(Reqs subReqs) {
+        this.subReqs = subReqs;
+    }
 }

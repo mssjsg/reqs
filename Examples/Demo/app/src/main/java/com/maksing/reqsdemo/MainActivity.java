@@ -237,7 +237,7 @@ public class MainActivity extends Activity {
         }
     });
 
-    private Reqs reqs = Reqs.create().thenReqs(reqs1).thenReqs(reqs2);
+    private Reqs reqs = Reqs.create().thenReqs(reqs1, true).thenReqs(reqs2, true);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
