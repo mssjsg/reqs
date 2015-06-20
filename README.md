@@ -9,7 +9,7 @@ Managing concurrent requests flow is difficult. And it's even more difficult com
 # Sample usage
 Examples usages can be found in the project located at Examples/Demo/.
 ```java
-Reqs reqs2 = Reqs.create().then(new Request() {
+Reqs.create().then(new Request() {
         @Override
         public void onCall(RequestSession session) {
             doRequest("1", session);
@@ -48,8 +48,7 @@ Reqs reqs2 = Reqs.create().then(new Request() {
         public void onFailure(Response failedResponse) {
             log("Requests Failed, cannot continue.");
         }
-    });
-    reqs2.start();
+    }).start();
 ```
 
 ## LICENSE
