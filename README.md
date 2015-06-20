@@ -1,9 +1,9 @@
-# Reqs: A tool for managing complex concurrent requests flow
+# Reqs: A library for managing complex concurrent requests flow
 
-Managing concurrent requests flow is difficult. And it's even more difficult with the complexity of Activity / Fragment life cycle. Reqs is created to deal with these issues.
+Managing concurrent requests flow is difficult. And it's even more difficult combining with the complexity of Activity / Fragment life cycle. Reqs is created to:
 
 - Provide a simple API to manage the order of the execution of the different requests and keep the responses with the ability to resume / pause / cancel a request flow. 
-- Concurrent requests executed in parallel or in sequences can be chained together in a Reqs object and this is make creating or modifying a request flow very easy.
+- Concurrent requests executed in parallel or in sequences can be chained together in a Reqs object and this make creating or modifying a request flow very easy.
 
 ## Communication
 
