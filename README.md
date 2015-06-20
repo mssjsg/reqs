@@ -9,46 +9,76 @@ Managing concurrent requests flow is difficult. And it's even more difficult com
 # Sample usage
 Examples usages can be found in the project located at Examples/Demo/.
 ```java
-Reqs.create().then(new Request() {
+private void doRequests() {
+        Reqs.create().then(new Request() {
+                @Override
+                public void onCall(RequestSession session) {
+                    doRequest("1", session);
+                }
+        
+                @Override
+                public void onNext(RequestSession session, Response response) {
+                    super.onNext(session, response);
+                    log(response.getData(Data.class).toString());
+                }
+            }.then(new Request() {
+                @Override
+                public void onCall(RequestSession session) {
+                    doRequest("2", session);
+                }
+            }, new Request() {
+                @Override
+                public void onCall(RequestSession session) {
+                    doRequest("3", session);
+                }
+            }).done(new Reqs.OnDoneListener() {
+                @Override
+                public void onSuccess(Reqs reqs, List<Response> responses) {
+                    String resp = "";
+        
+                    List<Data> dataList = reqs.getDataList(Data.class);
+        
+                    for (Data data : dataList) {
+                        resp = resp + data.str + "\n";
+                    }
+        
+                    log("all requests done. responses:\n" + resp);
+                }
+        
+                @Override
+                public void onFailure(Response failedResponse) {
+                    log("Requests Failed, cannot continue.");
+                }
+            }).start();
+}
+
+private void doRequest(final String data, final RequestSession requestSession) {
+
+    log("Start request " + data);
+    final Callback<Data, String> callback = new Callback<Data, String>() {
         @Override
-        public void onCall(RequestSession session) {
-            doRequest("1", session);
+        public void onSuccess(Data response) {
+            requestSession.done(response);
         }
 
         @Override
-        public void onNext(RequestSession session, Response response) {
-            super.onNext(session, response);
-            log(response.getData(Data.class).toString());
+        public void onFailure(String response) {
+            requestSession.fail(response);
         }
-    }.then(new Request() {
-        @Override
-        public void onCall(RequestSession session) {
-            doRequest("2", session);
-        }
-    }, new Request() {
-        @Override
-        public void onCall(RequestSession session) {
-            doRequest("3", session);
-        }
-    }).done(new Reqs.OnDoneListener() {
-        @Override
-        public void onSuccess(Reqs reqs, List<Response> responses) {
-            String resp = "";
+    };
 
-            List<Data> dataList = reqs.getDataList(Data.class);
-
-            for (Data data : dataList) {
-                resp = resp + data.str + "\n";
+    handler.postDelayed(new Runnable() {
+        @Override
+        public void run() {
+            if (TextUtils.isEmpty(data)) {
+                callback.onFailure("Empty String!!");
+            } else {
+                callback.onSuccess(new Data(data));
             }
-
-            log("all requests done. responses:\n" + resp);
         }
+    }, 2000);
+}
 
-        @Override
-        public void onFailure(Response failedResponse) {
-            log("Requests Failed, cannot continue.");
-        }
-    }).start();
 ```
 
 ## LICENSE
