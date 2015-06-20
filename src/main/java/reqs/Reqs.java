@@ -9,7 +9,7 @@ import reqs.util.SparseArray;
 /**
  * Created by Sing Mak on 31/5/15.
  * A simple utility class to handle the life cycle, flow and responses of multiple requests.
- * @author Sing Mak (email: sing.mak@accedo.tv, mssjsg@gmail.com)
+ * @author Sing Mak (mssjsg@gmail.com)
  */
 public final class Reqs {
 
