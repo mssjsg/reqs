@@ -524,6 +524,14 @@ public final class Reqs {
         if (!isIdle() && !isCompleted() && !isCancelled()) {
             log("cancel");
             state = State.CANCELLED;
+
+            if (requestLists.size() > 0) {
+                List<RequestSession> sessions = requestLists.get(0).list.getObjects();
+                for (RequestSession session : sessions) {
+                    session.cancelSubReqs();
+                }
+            }
+
             if (onCancelListener != null) {
                 onCancelListener.onCancel(this);
             }

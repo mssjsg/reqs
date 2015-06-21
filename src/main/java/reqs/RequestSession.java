@@ -85,15 +85,21 @@ public class RequestSession {
         request.onNext(this, reqs.getResponseById(id));
     }
 
-    synchronized void resumeSubReqs() {
+    void resumeSubReqs() {
         if (subReqs != null) {
             subReqs.resume();
         }
     }
 
-    synchronized void pauseSubReqs() {
+    void pauseSubReqs() {
         if (subReqs != null && request.pausable) {
             subReqs.pause();
+        }
+    }
+
+    void cancelSubReqs() {
+        if (subReqs != null) {
+            subReqs.cancel();
         }
     }
 
