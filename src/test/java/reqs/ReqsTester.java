@@ -19,8 +19,8 @@ public class ReqsTester {
     public ReqsTester(int[] expectValues, int sleepInterval, int timeout) {
         this.expectValues = new int[expectValues.length];
         this.actualValues = new int[expectValues.length];
-        for (int i : expectValues) {
-            this.expectValues[expectValues.length - 1] = i;
+        for (int i = 0; i < expectValues.length; i++) {
+            this.expectValues[i] = expectValues[i];
             this.actualValues[expectValues.length - 1] = -1;
         }
         this.sleepInterval = sleepInterval;
@@ -51,8 +51,12 @@ public class ReqsTester {
                 String actual = "";
                 String expect = "";
                 for (int i = 0; i < expectValues.length; i++) {
-                    actual = actual + this.expectValues[i] + ", ";
-                    expect = expect + this.actualValues[i] + ", ";
+                    actual = actual + this.actualValues[i];
+                    expect = expect + this.expectValues[i];
+                    if (i < expectValues.length - 1) {
+                        actual = actual + ", ";
+                        expect = expect + ", ";
+                    }
                 }
 
                 Assert.fail("Time out!! actual:[" + actual + "], expect:[" + expect + "]");
