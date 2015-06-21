@@ -129,12 +129,16 @@ public class RequestSession {
         this.currentRetryCount.getAndAdd(1);
     }
 
-    public Reqs getLastStepReqs() {
-        return reqs.getLastStepData(Reqs.class);
+    public <T> T getLastStepData(Class<T> c) {
+        return reqs.getLastStepData(c);
     }
 
-    public List<Reqs> getLastStepReqsList() {
-        return reqs.getLastStepReqsList();
+    public <T> List<T> getLastStepDataList(Class<T> c) {
+        return reqs.getLastStepDataList(c);
+    }
+
+    public Reqs getLastStepReqs() {
+        return reqs.getLastStepData(Reqs.class);
     }
 
     void setSubReqs(Reqs subReqs) {

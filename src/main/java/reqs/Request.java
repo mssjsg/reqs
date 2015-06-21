@@ -52,8 +52,7 @@ public abstract class Request {
     }
 
     /**
-     * Retry the request after Session.fail. please note that retries cannot be paused so it will continue to retry even Reqs.pause is called
-     * as the retires together are treated as one request in the current logic.
+     * Retry the request after Session.fail.
      * @param retryCount number of retries to do after this request failed before proceed to next step.
      * @return a new Request object that can do retry.
      */
