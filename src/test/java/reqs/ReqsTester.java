@@ -12,6 +12,10 @@ public class ReqsTester {
     private final int sleepInterval;
     private final int timeout;
 
+    public ReqsTester(int[] expectValues) {
+        this(expectValues, 20, 1000);
+    }
+
     public ReqsTester(int[] expectValues, int sleepInterval, int timeout) {
         this.expectValues = new int[expectValues.length];
         this.actualValues = new int[expectValues.length];
