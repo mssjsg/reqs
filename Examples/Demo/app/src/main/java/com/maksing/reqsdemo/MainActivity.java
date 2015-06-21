@@ -59,8 +59,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void onCall(RequestSession session) {
-            Data data = session.getReqs().getLastStepData(Data.class);
-            List<Data> dataList = session.getReqs().getLastStepDataList(Data.class);
+            Data data = session.getLastStepData(Data.class);
+            List<Data> dataList = session.getLastStepDataList(Data.class);
 
             if (session.getRetryCount() == 3) {
                 doRequest("retry success!!", session);
