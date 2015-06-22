@@ -53,7 +53,8 @@ public class RequestSession {
     }
 
     /**
-     * Mark this request session as failure, the flow will be interrupted and won't continue.
+     * Mark this request session as failure, the flow will be interrupted and won't continue when
+     * the max retry count is 0, but it will retry again if max retry count is > 0.
      * @param data the error response data
      */
     public synchronized void fail(Object data) {
@@ -69,16 +70,26 @@ public class RequestSession {
      * try to do the request again. be careful not to block the app by keep calling this function.
      */
     public void retry(Object errorData) {
-        if (request.getMaxRetryCount() == 0) {
-            call();
-        } else if (currentRetryCount.get() < request.getMaxRetryCount()) {
-            fail(errorData);
+        if (!isDone) {
+            if (request.getMaxRetryCount() == 0) {
+                call();
+            } else if (currentRetryCount.get() < request.getMaxRetryCount()) {
+                fail(errorData);
+            }
         }
     }
 
     public synchronized void failNoRetry(Object data) {
         currentRetryCount.set(request.getMaxRetryCount());
         fail(data);
+    }
+
+    public boolean isLastRetry() {
+        if (request.getMaxRetryCount() > 0) {
+            return currentRetryCount.get() >= request.getMaxRetryCount() - 1;
+        } else {
+            return false;
+        }
     }
 
     synchronized void resumeNext() {
