@@ -410,7 +410,7 @@ public final class Reqs {
 
         map.remove(requestId);
         if (map.size() == 0) {
-            lastStepResponses = currentStepResponses;
+            lastStepResponses = currentStepResponses.getSortedItems();
             currentStepResponses = new SparseArray<>();
             if (requestLists.get(0).onNextListener != null) {
                 RequestsMap firstMap = requestLists.get(0);
@@ -652,6 +652,11 @@ public final class Reqs {
                 Response response = responses.get(responses.keyAt(i));
                 if (c.isInstance(response.getData())) {
                     return (E) response.getData();
+                } else if (response.getData() instanceof Reqs) {
+                    E reqsData = response.getData(Reqs.class).getData(c);
+                    if (reqsData != null) {
+                        return reqsData;
+                    }
                 }
             }
         }
@@ -678,6 +683,13 @@ public final class Reqs {
                         list.add((E) obj);
                     }
                 }
+            } else if (response.getData() instanceof Reqs) {
+                Reqs subReqs = (Reqs)response.getData();
+                for (Response response1 : subReqs.getAllResponses().getObjects()) {
+                    if (c.isInstance(response1.getData())) {
+                        list.add((E) response1.getData());
+                    }
+                }
             }
         }
         return list;
@@ -693,42 +705,15 @@ public final class Reqs {
     public <E> E getLastStepData(Class<E> c) {
         if (lastStepResponses.size() > 0) {
             for (int i = 0; i < lastStepResponses.size(); i++) {
-                if (c.isInstance(lastStepResponses.getObjects().get(i).getData())) {
-                    return (E) lastStepResponses.getObjects().get(i).getData();
+                Response response = lastStepResponses.getObjects().get(i);
+                if (c.isInstance(response.getData())) {
+                    return (E) response.getData();
+                } else if (response.getData() instanceof Reqs) {
+                    return response.getData(Reqs.class).getLastStepData(c);
                 }
             }
         }
         return null;
-    }
-
-    public Reqs getLastStepReqs() {
-        return getLastStepData(Reqs.class);
-    }
-
-    public List<Reqs> getLastStepReqsList() {
-        return getLastStepDataList(Reqs.class);
-    }
-
-    /**
-     * return the data of last step.
-     * @param lastStepDataType the class of data response of last step
-     * @param <DataType> the class of data response of last step
-     * @return the data response of last step
-     */
-    public <DataType> DataType getLastStepReqsData(Class<DataType> lastStepDataType) {
-        Reqs reqs = getLastStepReqs();
-        if (reqs != null) {
-            return reqs.getData(lastStepDataType);
-        }
-        return null;
-    }
-
-    public <DataType> List<DataType> getLastStepReqsDataList(Class<DataType> c) {
-        Reqs reqs = getLastStepReqs();
-        if (reqs != null) {
-            return reqs.getDataList(c);
-        }
-        return Collections.emptyList();
     }
 
     /**
@@ -754,10 +739,43 @@ public final class Reqs {
                         list.add((E) obj);
                     }
                 }
+            } else if (response.getData() instanceof Reqs) {
+                Reqs reqs = (Reqs)response.getData();
+                for (Response response1 : reqs.lastStepResponses.getObjects()) {
+                    if (c.isInstance(response1.getData())) {
+                        list.add((E) response1.getData());
+                    }
+                }
             }
         }
 
         return list;
+    }
+
+    public Reqs getLastStepReqs() {
+        return getLastStepData(Reqs.class);
+    }
+
+    /**
+     * return the data of last step.
+     * @param lastStepDataType the class of data response of last step
+     * @param <DataType> the class of data response of last step
+     * @return the data response of last step
+     */
+    public <DataType> DataType getLastStepReqsData(Class<DataType> lastStepDataType) {
+        Reqs reqs = getLastStepReqs();
+        if (reqs != null) {
+            return reqs.getData(lastStepDataType);
+        }
+        return null;
+    }
+
+    public <DataType> List<DataType> getLastStepReqsDataList(Class<DataType> c) {
+        Reqs reqs = getLastStepReqs();
+        if (reqs != null) {
+            return reqs.getDataList(c);
+        }
+        return Collections.emptyList();
     }
 
     private Response getLastStepResponse() {

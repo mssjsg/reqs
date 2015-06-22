@@ -54,6 +54,10 @@ public class Response {
         return requestSession;
     }
 
+    public int getRequestSessionId() {
+        return requestSession.getId();
+    }
+
     /**
      * Return current Reqs instance
      * @return current Reqs instance
