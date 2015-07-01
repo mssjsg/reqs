@@ -98,5 +98,28 @@ public abstract class AbstractAsyncRequest<Result> extends Request {
 
     public abstract Result doInBackground();
 
-    protected abstract void postResultOnUiThread(Result result);
+    protected abstract void postResultOnUiThread(RequestSession requestSession, Result result);
+
+    private class ReqsFutureTask extends FutureTask<Result> {
+
+        RequestSession requestSession;
+
+        public ReqsFutureTask(RequestSession requestSession, Callable<Result> callable) {
+            super(callable);
+            this.requestSession = requestSession;
+        }
+
+        @Override
+        protected void done() {
+            try {
+                postResultIfNotInvoked(get(timeout, TimeUnit.MILLISECONDS));
+            } catch (InterruptedException e) {
+            } catch (ExecutionException e) {
+                throw new RuntimeException("An error occured while executing doInBackground()", e.getCause());
+            } catch (CancellationException e) {
+                postResultIfNotInvoked(null);
+            } catch (TimeoutException e) {
+            }
+        }
+    }
 }
