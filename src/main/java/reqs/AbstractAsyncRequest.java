@@ -2,6 +2,7 @@ package reqs;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +12,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,6 +28,10 @@ public abstract class AbstractAsyncRequest<Result> extends Request {
     private FutureTask<Result> futureTask;
 
     private long timeout = 10000;
+
+    private Callable mWorker;
+
+    private AtomicBoolean mTaskInvoked = new AtomicBoolean();
 
     private static final ThreadFactory sThreadFactory = new ThreadFactory() {
         private final AtomicInteger mCount = new AtomicInteger(1);
@@ -47,32 +53,50 @@ public abstract class AbstractAsyncRequest<Result> extends Request {
 
     private static volatile ExecutorService sDefaultExecutor = THREAD_POOL_EXECUTOR;
 
-    @Override
-    public void onCall(final RequestSession requestSession) {
-
-        Callable<Result> callable = new Callable<Result>() {
-            @Override
+    public AbstractAsyncRequest() {
+        super();
+        mWorker = new Callable<Result>() {
             public Result call() throws Exception {
-                return doInBackground(requestSession);
+                mTaskInvoked.set(true);
+                //noinspection unchecked
+                return postResult(doInBackground());
             }
         };
 
-        futureTask = new FutureTask<>(callable);
+        futureTask = new FutureTask<Result>(mWorker) {
+            @Override
+            protected void done() {
+                try {
+                    postResultIfNotInvoked(get(timeout, TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) {
+                } catch (ExecutionException e) {
+                    throw new RuntimeException("An error occured while executing doInBackground()", e.getCause());
+                } catch (CancellationException e) {
+                    postResultIfNotInvoked(null);
+                } catch (TimeoutException e) {
+                }
+            }
+        };
+    }
 
-        sDefaultExecutor.submit(futureTask);
-
-        try {
-            postResultToUiThread(futureTask.get(timeout, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+    private void postResultIfNotInvoked(Result result) {
+        final boolean wasTaskInvoked = mTaskInvoked.get();
+        if (!wasTaskInvoked) {
+            postResult(result);
         }
     }
 
-    public abstract Result doInBackground(RequestSession requestSession);
+    private Result postResult(Result result) {
+        postResultOnUiThread(result);
+        return result;
+    }
 
-    protected abstract void postResultToUiThread(Result result);
+    @Override
+    public void onCall(final RequestSession requestSession) {
+        sDefaultExecutor.execute(futureTask);
+    }
+
+    public abstract Result doInBackground();
+
+    protected abstract void postResultOnUiThread(Result result);
 }
