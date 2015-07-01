@@ -104,7 +104,7 @@ public abstract class Request {
                         request.onFailure(requestSession, failedResponse);
                         doRequest(request);
                     } else {
-                        requestSession.fail(failedResponse);
+                        requestSession.fail(failedResponse.getData());
                     }
                 }
             });

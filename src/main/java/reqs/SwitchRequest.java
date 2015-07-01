@@ -7,7 +7,7 @@ public class SwitchRequest extends Request {
 
     private Reqs.OnSwitchListener onSwitchListener;
 
-    SwitchRequest(Reqs.OnSwitchListener onSwitchListener) {
+    public SwitchRequest(Reqs.OnSwitchListener onSwitchListener) {
         this.onSwitchListener = onSwitchListener;
     }
 

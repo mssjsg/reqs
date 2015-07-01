@@ -283,6 +283,8 @@ public final class Reqs {
                 state = State.REQUESTING;
                 performCurrent(false);
             }
+        } else {
+            throw new IllegalStateException("Every Reqs instance can only start once!!");
         }
     }
 
@@ -456,7 +458,8 @@ public final class Reqs {
             return;
         }
 
-        responses.put(requestId, new Response(data, requestSession, this));
+        Response failedResponse = new Response(data, requestSession, this);
+        responses.put(requestId, failedResponse);
         failedRequestId = requestId;
 
         if (!failed) {
@@ -465,6 +468,7 @@ public final class Reqs {
             if (isPaused()) {
                 pendingCompletion = true;
             } else {
+                requestSession.getRequest().onFailure(requestSession, failedResponse);
                 complete();
             }
         }
@@ -476,21 +480,9 @@ public final class Reqs {
      */
     public List<Response> getResponseList() {
         final List<Response> responseList = new ArrayList<>();
-        for (int i = 0; i < responses.size(); i++) {
-            responseList.add(responses.get(responses.keyAt(i)));
-        }
-        return responseList;
-    }
-
-    private List<Response> getResponseList(int[] keys) {
-        final List<Response> responseList = new ArrayList<>();
-        for (int i = 0; i < responses.size(); i++) {
-            int key = responses.keyAt(i);
-            for (int k : keys) {
-                if (key == k) {
-                    responseList.add(responses.get(key));
-                }
-            }
+        SparseArray<Response> resps = responses.getSortedItems();
+        for (int i = 0; i < resps.size(); i++) {
+            responseList.add(resps.get(resps.keyAt(i)));
         }
         return responseList;
     }
