@@ -10,7 +10,7 @@ public class ReqsRequest extends Request {
     private Reqs subReqs;
 
     public ReqsRequest(Reqs reqs) {
-        this(reqs, false);
+        this(reqs, true);
     }
 
     public ReqsRequest(Reqs reqs, boolean pausable) {
