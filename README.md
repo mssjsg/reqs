@@ -81,6 +81,9 @@ private void doRequest(final String data, final RequestSession requestSession) {
 
 ```
 
+## How to use
+Please refer to the [GitHub Wiki](https://github.com/mssjsg/reqs/wiki) page and the demo project in /Examples/Demo
+
 ## LICENSE
 
 Licensed under the Apache License, Version 2.0 (the "License");

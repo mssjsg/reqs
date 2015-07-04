@@ -54,7 +54,7 @@ public class RequestSession {
 
     /**
      * Mark this request session as failure, the flow will be interrupted and won't continue when
-     * the max retry count is 0, but it will retry again if max retry count is > 0.
+     * the max retry count is 0, but it will retry again if max retry count is {@literal > 0}.
      * @param data the error response data
      */
     public synchronized void fail(Object data) {
