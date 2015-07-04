@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class Request {
     protected final Class<?> expectResponseType;
     protected int maxRetryCount;
-    protected boolean pausable = false;
+    protected boolean pausable = true;
 
     /**
      * Default constructor, no validation of the response type

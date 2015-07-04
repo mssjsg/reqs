@@ -1,12 +1,25 @@
 group 'com.maksing.reqs'
-version '0.2'
+version '0.9'
 
-apply plugin: 'java'
+apply plugin: 'android-library'
 
-sourceCompatibility = 1.7
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+    }
+}
 
 repositories {
     mavenCentral()
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
 }
 
 dependencies {

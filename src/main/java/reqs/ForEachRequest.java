@@ -20,7 +20,7 @@ public abstract class ForEachRequest<E> extends Request {
             requests.add(getRequest(param));
         }
 
-        Reqs.create().then(requests).done(new Reqs.OnDoneListener() {
+        Reqs reqs = Reqs.create().then(requests).done(new Reqs.OnDoneListener() {
             @Override
             public void onSuccess(Reqs reqs, List<Response> responses) {
                 requestSession.done(reqs);
@@ -30,7 +30,14 @@ public abstract class ForEachRequest<E> extends Request {
             public void onFailure(Response failedResponse) {
                 requestSession.fail(failedResponse.getData());
             }
-        }).start();
+        }).setOnPauseListener(new Reqs.OnPauseListener() {
+            @Override
+            public void onPause(Reqs reqs) {
+
+            }
+        });
+        requestSession.setSubReqs(reqs);
+        reqs.start();
     }
 
     public abstract Request getRequest(E param);

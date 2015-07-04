@@ -25,7 +25,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
     private final long timeout;
 
     public AbstractAsyncRequest() {
-        timeout = 20000;
+        timeout = -1;
     }
 
     protected AbstractAsyncRequest(long timeout) {
@@ -81,7 +81,14 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
     @Override
     public final void onNext(RequestSession requestSession, Response response) {
         super.onNext(requestSession, response);
-        onDataResponded(requestSession.getReqs(), (Data)response.getData(Object.class));
+        onDataResponded(requestSession.getReqs(), (Data) response.getData(Object.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final void onFailure(RequestSession requestSession, Response errorResponse) {
+        super.onFailure(requestSession, errorResponse);
+        onError(requestSession.getReqs(), (Throwable)errorResponse.getData());
     }
 
     public abstract Data doInBackground();
@@ -140,7 +147,11 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
             protected void done() {
                 Result result = null;
                 try {
-                    result = get(timeout, TimeUnit.MILLISECONDS);
+                    if (timeout != -1) {
+                        result = get(timeout, TimeUnit.MILLISECONDS);
+                    } else {
+                        result = get();
+                    }
                 } catch (InterruptedException e) {
                 } catch (ExecutionException e) {
                     error = e.getCause();

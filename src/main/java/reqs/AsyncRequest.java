@@ -1,12 +1,11 @@
-package com.maksing.reqsdemo;
+package reqs;
 
 import android.os.Handler;
 import android.os.Looper;
 
-import reqs.AbstractAsyncRequest;
-
 /**
  * Created by maksing on 4/7/15.
+ * handle the async operation and post result on Android main thread
  */
 public abstract class AsyncRequest<T> extends AbstractAsyncRequest<T> {
 
