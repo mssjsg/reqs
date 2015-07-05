@@ -21,25 +21,61 @@ import java.util.concurrent.atomic.AtomicInteger;
  * this is still in progress, please dont use this
  */
 public abstract class AbstractAsyncRequest<Data> extends Request {
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
+    private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
+    private static final int KEEP_ALIVE = 1;
 
-    private final long timeout;
+    private static final ThreadFactory sThreadFactory = new ThreadFactory() {
+        private final AtomicInteger mCount = new AtomicInteger(1);
+
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "AsyncRequest #" + mCount.getAndIncrement());
+        }
+    };
+
+    private static final BlockingQueue<Runnable> sPoolWorkQueue =
+            new LinkedBlockingQueue<Runnable>(128);
+
+    /**
+     * An {@link Executor} that can be used to execute tasks in parallel.
+     */
+    public static final ExecutorService THREAD_POOL_EXECUTOR
+            = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE,
+            TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory);
+
+    private long timeout;
+
+    private ExecutorService executorService;
 
     public AbstractAsyncRequest() {
         timeout = -1;
+        this.executorService = THREAD_POOL_EXECUTOR;
+    }
+
+    protected AbstractAsyncRequest(ExecutorService executorService) {
+        this();
+        this.executorService = executorService;
     }
 
     protected AbstractAsyncRequest(long timeout) {
+        this();
         this.timeout = timeout;
+    }
+
+    protected AbstractAsyncRequest(long timeout, ExecutorService executorService) {
+        this(timeout);
+        this.executorService = executorService;
     }
 
     @Override
     public void onCall(final RequestSession requestSession) {
 
-        final AsyncTaskRequest<Data> request = new AsyncTaskRequest<Data>(timeout) {
+        final AsyncTaskRequest<Data> request = new AsyncTaskRequest<Data>(timeout, executorService) {
 
             @Override
             public Data doInBackground() throws Exception {
-                return AbstractAsyncRequest.this.doInBackground();
+                return AbstractAsyncRequest.this.getDataInBackground();
             }
         };
 
@@ -88,10 +124,15 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
     @Override
     public final void onFailure(RequestSession requestSession, Response errorResponse) {
         super.onFailure(requestSession, errorResponse);
-        onError(requestSession.getReqs(), (Throwable)errorResponse.getData());
+        onError(requestSession.getReqs(), (Throwable) errorResponse.getData());
     }
 
-    public abstract Data doInBackground() throws Exception;
+    /**
+     * Do the background task and returned the data.
+     * @return data in background thread
+     * @throws Exception
+     */
+    public abstract Data getDataInBackground() throws Exception;
 
     public void onDataResponded(Reqs reqs, Data result) {
 
@@ -105,30 +146,9 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
 
     private static abstract class AsyncTaskRequest<Result> extends Request {
 
-        private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-        private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
-        private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
-        private static final int KEEP_ALIVE = 1;
-
-        private static final ThreadFactory sThreadFactory = new ThreadFactory() {
-            private final AtomicInteger mCount = new AtomicInteger(1);
-
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "AsyncRequest #" + mCount.getAndIncrement());
-            }
-        };
-
-        private static final BlockingQueue<Runnable> sPoolWorkQueue =
-                new LinkedBlockingQueue<Runnable>(128);
-
-        /**
-         * An {@link Executor} that can be used to execute tasks in parallel.
-         */
-        public static final ExecutorService THREAD_POOL_EXECUTOR
-                = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE,
-                TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory);
-
         private static volatile ExecutorService sDefaultExecutor = THREAD_POOL_EXECUTOR;
+
+        private ExecutorService executorService = sDefaultExecutor;
 
         private RequestSession requestSession;
 
@@ -166,8 +186,9 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
 
         private Throwable error;
 
-        protected AsyncTaskRequest(long timeout) {
+        protected AsyncTaskRequest(long timeout, ExecutorService executorService) {
             this.timeout = timeout;
+            this.executorService = executorService;
         }
 
         private void postResultIfNotInvoked(RequestSession requestSession, Result result) {
@@ -192,7 +213,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
         @Override
         public void onCall(final RequestSession requestSession) {
             this.requestSession = requestSession;
-            sDefaultExecutor.execute(futureTask);
+            executorService.execute(futureTask);
         }
     }
 }

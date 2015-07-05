@@ -1,5 +1,6 @@
 package reqs;
 
+import android.os.Process;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -14,6 +15,23 @@ public abstract class AsyncRequest<T> extends AbstractAsyncRequest<T> {
     public AsyncRequest() {
         super();
     }
+
+    /**
+     * Do the background task and returned the data.
+     * @return data in background thread
+     * @throws Exception
+     */
+    public final T getDataInBackground() throws Exception {
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+        return doInBackground();
+    }
+
+    /**
+     * Do the background task and returned the data.
+     * @return data in background thread
+     * @throws Exception
+     */
+    public abstract T doInBackground() throws Exception;
 
     @Override
     protected final void postOnMainThread(Runnable runnable) {
