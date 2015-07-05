@@ -5,9 +5,15 @@ import java.util.List;
 
 /**
  * Created by maksing on 1/7/15.
+ * Call a request with different param in a list.
  */
 public abstract class ForEachRequest<E> extends Request {
 
+    /**
+     * Return the parameters list
+     * @param reqs
+     * @return the parameters list
+     */
     public abstract List<E> getParamsList(Reqs reqs);
 
     @Override
@@ -40,5 +46,10 @@ public abstract class ForEachRequest<E> extends Request {
         reqs.start();
     }
 
+    /**
+     * apply a parameter from the list returned from getParamsList to a request and return the request
+     * @param param
+     * @return a request with a parameter in the list applied
+     */
     public abstract Request getRequest(E param);
 }
