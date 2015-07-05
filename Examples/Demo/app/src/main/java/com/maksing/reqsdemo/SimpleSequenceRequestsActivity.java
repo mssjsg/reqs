@@ -25,30 +25,51 @@ public class SimpleSequenceRequestsActivity extends BaseActivity {
             public void onCall(RequestSession requestSession) {
                 delayedForgroundWork("Step 1", 1000, requestSession);
             }
-        }).then(new Request() {
 
             @Override
-            public void onCall(RequestSession requestSession) {
-                delayedForgroundWork("Step 2", 1500, requestSession);
+            public void onNext(RequestSession requestSession, Response response) {
+                super.onNext(requestSession, response);
+                log(response.getData(Data.class).str);
             }
         }).then(new Request() {
 
             @Override
             public void onCall(RequestSession requestSession) {
-                delayedForgroundWork("Step 3", 3000, requestSession);
+                delayedForgroundWork("Step 2", 500, requestSession);
+            }
+
+            @Override
+            public void onNext(RequestSession requestSession, Response response) {
+                super.onNext(requestSession, response);
+                log(response.getData(Data.class).str);
+            }
+        }).then(new Request() {
+
+            @Override
+            public void onCall(RequestSession requestSession) {
+                delayedForgroundWork("Step 3", 1000, requestSession);
+            }
+
+            @Override
+            public void onNext(RequestSession requestSession, Response response) {
+                super.onNext(requestSession, response);
+                log(response.getData(Data.class).str);
             }
         }).then(new AsyncRequest<Data>() {
             @Override
             public Data doInBackground() throws InterruptedException {
-                return backgroundWork("Step 4 async", 2000);
+                return backgroundWork("Step 4 async", 1000);
+            }
+
+            @Override
+            public void onDataResponded(Reqs reqs, Data result) {
+                super.onDataResponded(reqs, result);
+                log(result.str);
             }
         }).done(new Reqs.OnDoneListener() {
             @Override
             public void onSuccess(Reqs reqs, List<Response> responses) {
                 log("done!");
-                for (Response response : responses) {
-                    log(response.getData(Data.class).str);
-                }
             }
 
             @Override

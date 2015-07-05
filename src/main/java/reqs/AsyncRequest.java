@@ -16,7 +16,7 @@ public abstract class AsyncRequest<T> extends AbstractAsyncRequest<T> {
     }
 
     @Override
-    protected void postOnMainThread(Runnable runnable) {
+    protected final void postOnMainThread(Runnable runnable) {
         handler.post(runnable);
     }
 }

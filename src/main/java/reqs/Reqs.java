@@ -295,8 +295,12 @@ public final class Reqs {
      */
     public Reqs next(OnNextListener onNextListener) {
         if (requestLists.size() > 0) {
-            requestLists.get(requestLists.size() - 1).onNextListener = onNextListener;
-            initialRequests.get(requestLists.size() - 1).onNextListener = onNextListener;
+            if (requestLists.get(requestLists.size() - 1).onNextListener == null) {
+                requestLists.get(requestLists.size() - 1).onNextListener = onNextListener;
+                initialRequests.get(requestLists.size() - 1).onNextListener = onNextListener;
+            } else {
+                throw new IllegalStateException("Can only apply reqs.next(..) once for each step!!! e.g. it's illegal to do something like: reqs.then(..).next(..).next(..)");
+            }
         }
         return this;
     }
