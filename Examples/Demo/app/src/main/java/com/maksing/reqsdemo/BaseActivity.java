@@ -14,27 +14,30 @@ public abstract class BaseActivity extends Activity {
 
     private TextView textLog;
 
-    protected Reqs reqs = getReqs().setOnCancelListener(new Reqs.OnCancelListener() {
-        @Override
-        public void onCancel(Reqs reqs) {
-            log("cancelled");
-        }
-    }).setOnPauseListener(new Reqs.OnPauseListener() {
-        @Override
-        public void onPause(Reqs reqs) {
-            log("paused");
-        }
-    }).setOnResumeListener(new Reqs.OnResumeListener() {
-        @Override
-        public void onResume(Reqs reqs) {
-            log("resume");
-        }
-    });
+    protected Reqs reqs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        reqs = getReqs().setOnCancelListener(new Reqs.OnCancelListener() {
+            @Override
+            public void onCancel(Reqs reqs) {
+                log("cancelled");
+            }
+        }).setOnPauseListener(new Reqs.OnPauseListener() {
+            @Override
+            public void onPause(Reqs reqs) {
+                log("paused");
+            }
+        }).setOnResumeListener(new Reqs.OnResumeListener() {
+            @Override
+            public void onResume(Reqs reqs) {
+                log("resume");
+            }
+        });
+
         textLog = (TextView)findViewById(R.id.requestsLog);
 
         TextView startBtn = findView(R.id.btnStart);
@@ -46,6 +49,7 @@ public abstract class BaseActivity extends Activity {
             @Override
             public void onClick(View v) {
                 textLog.setText("");
+                log("loading...");
                 if (reqs != null) {
                     reqs.cancel();
                 }
@@ -74,7 +78,7 @@ public abstract class BaseActivity extends Activity {
                 reqs.cancel();
             }
         });
-
+        log("loading...");
         reqs.start();
     }
 

@@ -38,7 +38,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
         final AsyncTaskRequest<Data> request = new AsyncTaskRequest<Data>(timeout) {
 
             @Override
-            public Data doInBackground() {
+            public Data doInBackground() throws Exception {
                 return AbstractAsyncRequest.this.doInBackground();
             }
         };
@@ -91,7 +91,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
         onError(requestSession.getReqs(), (Throwable)errorResponse.getData());
     }
 
-    public abstract Data doInBackground();
+    public abstract Data doInBackground() throws Exception;
 
     public void onDataResponded(Reqs reqs, Data result) {
 
@@ -187,7 +187,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
             return result;
         }
 
-        public abstract Result doInBackground();
+        public abstract Result doInBackground() throws Exception;
 
         @Override
         public void onCall(final RequestSession requestSession) {
