@@ -2,6 +2,7 @@
 Managing concurrent requests flow is difficult. And it's even more difficult combining with the complexity of Activity / Fragment life cycle. Reqs is created to:
 - Provide a simple API to manage the order of the execution of the different requests and keep the responses with the ability to resume / pause / cancel a request flow. 
 - Chain concurrent requests executed in parallel or in sequences together in a Reqs object and this make creating or modifying a request flow very easy.
+- Works well with operations that is already running in background thread or you can use AsyncRequest class do work in background.
 
 ##Why Reqs?
 While there are already amazing libraries such as RXJava that can manage data flow very well, I think I need something tinier, simpler with *fewer* functions but just enough to get the job done. Also, I want to pause and resume a request flow to resolve some lifecycle issues in Android(especially in dealing with fragment in data callbacks), which *cannot* be easily done in other libraries(correct me if I am wrong). As a result, I created this library. The library is small (< 40 kb) but has been very useful in dealing with complex requests flow in my projects. This could be an alternative choice if you somehow don't want to use RXJava.
