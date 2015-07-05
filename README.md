@@ -13,7 +13,7 @@ repositories {
 }
 ```
 ```groovy
-compile 'com.maksing:reqs:0.9.0'
+compile 'com.maksing:reqs:1.0.0'
 ```
 ## Communication
 - Report issues in [GitHub Issues](https://github.com/mssjsg/reqs/issues)
