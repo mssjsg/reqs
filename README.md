@@ -3,11 +3,25 @@ Managing concurrent requests flow is difficult. And it's even more difficult com
 - Provide a simple API to manage the order of the execution of the different requests and keep the responses with the ability to resume / pause / cancel a request flow. 
 - Chain concurrent requests executed in parallel or in sequences together in a Reqs object and this make creating or modifying a request flow very easy.
 
+##Why Reqs?
+While there are already amazing libraries such as RXJava that can manage data flow very well, I think I need something tinier, simpler with *fewer* functions but just enough to get the job done. Also, I want to pause and resume a request flow to resolve some lifecycle issues in Android(especially in dealing with fragment in data callbacks), a function which *cannot* be easily done in other libraries(correct me if I am wrong). As a result, I created this library. The library is small (< 40 kb) but has been very useful in dealing with complex requests flow in my projects. This could be an alternative choice if you somehow don't want to use RXJava.
+
+## Download
+```groovy
+repositories {
+    jcenter()
+}
+```
+```groovy
+compile 'com.maksing:reqs:0.9.0'
+```
 ## Communication
 - Report issues in [GitHub Issues](https://github.com/mssjsg/reqs/issues)
 
-# Sample usage
-Examples usages can be found in the project located at Examples/Demo/.
+## How to use
+Please refer to the [GitHub Wiki](https://github.com/mssjsg/reqs/wiki) page and the demo project in /Examples/Demo
+## Sample usage
+Sample usages can be found in the project located at Examples/Demo/.
 ```java
 private void doRequests() {
         Reqs.create().then(new Request() {
@@ -80,9 +94,6 @@ private void doRequest(final String data, final RequestSession requestSession) {
 }
 
 ```
-
-## How to use
-Please refer to the [GitHub Wiki](https://github.com/mssjsg/reqs/wiki) page and the demo project in /Examples/Demo
 
 ## LICENSE
 
