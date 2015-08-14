@@ -681,11 +681,8 @@ public final class Reqs {
                 }
             } else if (response.getData() instanceof Reqs) {
                 Reqs subReqs = (Reqs)response.getData();
-                for (Response response1 : subReqs.getAllResponses().getObjects()) {
-                    if (c.isInstance(response1.getData())) {
-                        list.add((E) response1.getData());
-                    }
-                }
+                List<E> subList = subReqs.getDataList(c);
+                list.addAll(subList);
             }
         }
         return list;
@@ -737,11 +734,9 @@ public final class Reqs {
                 }
             } else if (response.getData() instanceof Reqs) {
                 Reqs reqs = (Reqs)response.getData();
-                for (Response response1 : reqs.lastStepResponses.getObjects()) {
-                    if (c.isInstance(response1.getData())) {
-                        list.add((E) response1.getData());
-                    }
-                }
+
+                List<E> subList = reqs.getLastStepDataList(c);
+                list.addAll(subList);
             }
         }
 
