@@ -52,6 +52,10 @@ public class RequestSession {
         }
     }
 
+    public synchronized boolean isDoneAlready() {
+        return isDone;
+    }
+
     /**
      * Mark this request session as failure, the flow will be interrupted and won't continue when
      * the max retry count is 0, but it will retry again if max retry count is {@literal > 0}.
