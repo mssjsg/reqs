@@ -21,9 +21,9 @@ public abstract class AsyncRequest<T> extends AbstractAsyncRequest<T> {
      * @return data in background thread
      * @throws Exception
      */
-    public final T getDataInBackground() throws Exception {
+    public final T getDataInBackground(Reqs reqs) throws Exception {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        return doInBackground();
+        return doInBackground(reqs);
     }
 
     /**
@@ -31,7 +31,7 @@ public abstract class AsyncRequest<T> extends AbstractAsyncRequest<T> {
      * @return data in background thread
      * @throws Exception
      */
-    public abstract T doInBackground() throws Exception;
+    public abstract T doInBackground(Reqs reqs) throws Exception;
 
     @Override
     protected final void postOnMainThread(Runnable runnable) {

@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by maksing on 14/6/15.
- * this is still in progress, please dont use this
  */
 public abstract class AbstractAsyncRequest<Data> extends Request {
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
@@ -75,7 +74,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
 
             @Override
             public Data doInBackground() throws Exception {
-                return AbstractAsyncRequest.this.getDataInBackground();
+                return AbstractAsyncRequest.this.getDataInBackground(requestSession.getReqs());
             }
         };
 
@@ -132,7 +131,7 @@ public abstract class AbstractAsyncRequest<Data> extends Request {
      * @return data in background thread
      * @throws Exception
      */
-    public abstract Data getDataInBackground() throws Exception;
+    public abstract Data getDataInBackground(Reqs reqs) throws Exception;
 
     public void onDataResponded(Reqs reqs, Data result) {
 
