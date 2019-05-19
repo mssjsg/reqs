@@ -1,5 +1,5 @@
 # DEPRECATED
-I did this library 4 years ago, this was a project. Nowadays there are all sort of ways to handle request flows, such as rxjava, kotlin corotine, java 8 stream, etc...
+I did this library 4 years ago, this was a fun project. Nowadays there are all sort of ways to handle request flows, such as rxjava, kotlin corotine, java 8 stream, etc...
 
 # Reqs: A library for managing complex concurrent requests flow in Android 
 Managing concurrent requests flow is difficult. And it's even more difficult combining with the complexity of Activity / Fragment life cycle. Reqs is created to:
